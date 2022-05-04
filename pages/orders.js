@@ -4,7 +4,9 @@ import Layout from "../components/Layout";
 const Orders = () => {
   return (
     <div>
-      <Layout>Orders</Layout>
+      <Layout>
+        <h1 className="text-2xl text-gray-800 font-light">Orders</h1>
+      </Layout>
     </div>
   );
 };

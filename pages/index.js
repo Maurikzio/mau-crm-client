@@ -1,5 +1,6 @@
 import Layout from '../components/Layout'
 import { gql, useQuery } from '@apollo/client'
+import { useRouter } from 'next/router'
 
 const GET_USER_CLIENTS = gql`
   query GetClientsBySeller {
@@ -17,8 +18,14 @@ const GET_USER_CLIENTS = gql`
 
 export default function Home () {
   const { data, loading } = useQuery(GET_USER_CLIENTS)
+  const router = useRouter()
 
   if (loading) return 'Loading....'
+
+  if (!data?.getClientsBySeller) {
+    router.push('/login')
+    return null
+  }
 
   return (
     <div>

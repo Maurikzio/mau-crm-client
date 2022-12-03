@@ -1,11 +1,31 @@
+import React, { useState } from 'react'
+import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
+import { useMutation, gql } from '@apollo/client'
+
+const NEW_ACCOUNT_QUERY = gql`
+  mutation NewUser($input: UserInput) {
+    newUser(input: $input) {
+      name
+      lastname
+      createdWhen
+      id
+      email
+    }
+  }
+`
 
 /*
   private page it will be used for users only
 */
 export default function NewAccount () {
+  const [message, setMessage] = useState(null)
+  const [newUser] = useMutation(NEW_ACCOUNT_QUERY)
+
+  const router = useRouter()
+
   // form validation
   const formik = useFormik({
     initialValues: {
@@ -20,14 +40,47 @@ export default function NewAccount () {
       email: Yup.string().email('Email is not valid').required('Email is required'),
       password: Yup.string().required('Password is required').min(6, 'Password must be at least 6 characters')
     }),
-    onSubmit: (values) => {
-      console.log(values)
-      console.log('values: ', values)
+    onSubmit: async (values) => {
+      const { name, lastname, email, password } = values
+      try {
+        // data es la respuesta del servidor y sera la respuesta que en nuestro cso pusimos en NEW_ACCOUNT_QUERY
+        const { data } = await newUser({
+          variables: {
+            input: {
+              name,
+              lastname,
+              email,
+              password
+            }
+          }
+        })
+        setMessage(`Successfully created account for ${data.newUser.name}!`)
+        setTimeout(() => {
+          setMessage(null)
+
+          // redirect to login
+          router.push('/login')
+        }, 3000)
+      } catch (err) {
+        setMessage(err.message)
+        setTimeout(() => {
+          setMessage(null)
+        }, 3000)
+      }
     }
   })
 
+  const showMessage = () => {
+    return (
+      <div className='bg-white py-2 px-3 w-full my-3 max-w-sm text-center mx-auto'>
+        <p>{message}</p>
+      </div>
+    )
+  }
+
   return (
     <Layout>
+      {message ? showMessage() : null}
       <h1 className='text-center text-2xl text-white font-light'>Create New Account</h1>
       <div className='flex justify-center mt-5'>
         <div className='w-full max-w-sm'>
